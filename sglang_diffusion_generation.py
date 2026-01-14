@@ -3,6 +3,7 @@ import os
 import torch
 import random
 import numpy as np
+from tqdm import tqdm
 
 try:
     from sglang.multimodal_gen import DiffGenerator
@@ -139,13 +140,13 @@ def sample_func(prompt, index, base_seed, num_inference_steps=25, height=768, wi
     # Load model is handled outside in this adaptation for better control
     
     if generator == "dummy" or not HAS_SGLANG:
-        print(f"[Dummy] Generating noise video for: '{prompt}'")
+        # print(f"[Dummy] Generating noise video for: '{prompt}'")
         # In dummy mode we just return None and let it pass for now or handle appropriately
         return None
 
     current_seed = base_seed + index
     
-    print(f"[Generating] Prompt: '{prompt}' | Seed: {current_seed} | Steps: {num_inference_steps} | Res: {width}x{height}")
+    # print(f"[Generating] Prompt: '{prompt}' | Seed: {current_seed} | Steps: {num_inference_steps} | Res: {width}x{height}")
     
     # SGLang internal handling
     # Note: SGLang's generator.generate might save output internally if output_path is provided.
@@ -228,9 +229,9 @@ def main():
 
     load_model(args.model_path, args.num_gpus)
 
+    # Collect all tasks
+    tasks = []
     for dimension in args.dimensions:
-        print(f"Processing dimension: {dimension}")
-        
         prompt_file = os.path.join(args.prompts_dir, f"{dimension}.txt")
         if not os.path.exists(prompt_file):
             print(f"Warning: Prompt file not found at {prompt_file}, skipping...")
@@ -242,34 +243,29 @@ def main():
         dim_save_path = os.path.join(args.save_path, dimension)
         os.makedirs(dim_save_path, exist_ok=True)
 
-        for i, prompt in enumerate(prompt_list):
-            print(f"[{i+1}/{len(prompt_list)}] Processing prompt: {prompt}")
+        for prompt in prompt_list:
             for index in range(args.num_samples):
-                # We sanitize prompt for filename
-                safe_prompt = "".join([c if c.isalnum() or c in (' ', '_', '-') else '' for c in prompt]).replace(' ', '_')[:100]
-                filename = f"{safe_prompt}-{index}.mp4"
-                file_path = os.path.join(dim_save_path, filename)
-                
-                if os.path.exists(file_path):
-                    print(f"  Skipping existing: {filename}")
-                    continue
+                tasks.append((dimension, prompt, index, dim_save_path))
 
-                # SGLang usually expects a directory for output_path and generates names, 
-                # or we might need to move it. 
-                # Here we pass the dim_save_path and expect to manage the filename.
-                # If sglang doesn't support direct filename, we might need post-processing.
-                
-                # For consistency with naive script, we call sample_func.
-                # However, SGLang's generate often handles saving.
-                sample_func(
-                    prompt=prompt, 
-                    index=index, 
-                    base_seed=args.seed, 
-                    num_inference_steps=args.num_inference_steps, 
-                    height=args.height, 
-                    width=args.width,
-                    output_path=file_path # Passing exact path if supported, else will need rename
-                )
+    # Run tasks with progress bar
+    for dimension, prompt, index, dim_save_path in tqdm(tasks, desc="Generating Videos"):
+        # We sanitize prompt for filename
+        safe_prompt = "".join([c if c.isalnum() or c in (' ', '_', '-') else '' for c in prompt]).replace(' ', '_')[:100]
+        filename = f"{safe_prompt}-{index}.mp4"
+        file_path = os.path.join(dim_save_path, filename)
+        
+        if os.path.exists(file_path):
+            continue
+
+        sample_func(
+            prompt=prompt, 
+            index=index, 
+            base_seed=args.seed, 
+            num_inference_steps=args.num_inference_steps, 
+            height=args.height, 
+            width=args.width,
+            output_path=file_path
+        )
 
     print("Generation complete.")
 
