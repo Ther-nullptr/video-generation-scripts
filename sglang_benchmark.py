@@ -6,12 +6,10 @@ import numpy as np
 import time
 from tqdm import tqdm
 
-try:
-    from sglang.multimodal_gen import DiffGenerator
-    HAS_SGLANG = True
-except ImportError:
-    HAS_SGLANG = False
-    print("Warning: 'sglang' library not found. Using dummy noise generation.")
+
+from sglang.multimodal_gen import DiffGenerator
+HAS_SGLANG = True
+
 
 # Global model variable to avoid reloading per sample
 generator = None
@@ -66,14 +64,14 @@ def parse_args():
     parser.add_argument(
         "--warmup_runs",
         type=int,
-        default=2,
+        default=1,
         help="Number of warmup runs before benchmarking",
     )
     
     parser.add_argument(
         "--benchmark_runs",
         type=int,
-        default=5,
+        default=2,
         help="Number of runs to average for benchmarking",
     )
 
@@ -184,7 +182,7 @@ def main():
                 width=args.width,
                 seed=args.seed + i, # Vary seed slightly
                 return_frames=False,
-                output_path=os.path.join(args.output_dir, f"warmup_{i}.mp4") if args.save_output else None,
+                output_path=os.path.join(args.output_dir, f"warmup_{i}.mp4"),
                 save_output=args.save_output
             )
         )
@@ -233,7 +231,7 @@ def main():
                     width=args.width,
                     seed=args.seed + 100 + i,
                     return_frames=False,
-                    output_path=os.path.join(args.output_dir, f"bench_{i}.mp4") if args.save_output else None,
+                    output_path=os.path.join(args.output_dir, f"bench_{i}.mp4"),
                     save_output=args.save_output,
                     callback_on_step_end=timer,
                     # callback_steps=1 # Ensure callback is called every step
@@ -250,7 +248,7 @@ def main():
                     width=args.width,
                     seed=args.seed + 100 + i,
                     return_frames=False,
-                    output_path=os.path.join(args.output_dir, f"bench_{i}.mp4") if args.save_output else None,
+                    output_path=os.path.join(args.output_dir, f"bench_{i}.mp4"),
                     save_output=args.save_output
                 )
             )
@@ -307,10 +305,10 @@ def main():
     print(f"  Total Throughput:  {throughput:.4f} videos/s")
     print("="*40)
 
-    # Cleanup
-    global generator
-    del generator
-    generator = None
+    # # Cleanup
+    # global generator
+    # del generator
+    # generator = None
 
 if __name__ == "__main__":
     main()

@@ -4,10 +4,10 @@ import shutil
 # ================= 配置区域 =================
 # 输入目录：就是截图里包含那一堆文件夹的父目录
 # 如果脚本就放在该目录下，可以用 "."
-source_dir = r"/home/wyj24/project/video_generation/output/Wan2.1-T2V-1.3B-Diffusers_steps50_fps16_samples5_res832x480_cache_dit_rdt0.4_scmultra_taylorseer_tsorder1/overall_consistency" 
+source_dir = r"/home/wyj24/project/video_generation/output/Wan2.1-T2V-1.3B-Diffusers_steps25_fps16_samples5_res832x480/overall_consistency" 
 
 # 输出目录：你想把提取出来的视频存放在哪里
-output_dir = r"/home/wyj24/project/video_generation/output/Wan2.1-T2V-1.3B-Diffusers_steps50_fps16_samples5_res832x480_cache_dit_rdt0.4_scmultra_taylorseer_tsorder1/overall_consistency_2"
+output_dir = r"/home/wyj24/project/video_generation/output/Wan2.1-T2V-1.3B-Diffusers_steps25_fps16_samples5_res832x480/overall_consistency_2"
 # ===========================================
 
 def extract_and_rename():
