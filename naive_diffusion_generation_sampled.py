@@ -181,6 +181,23 @@ def load_model(flash_attn=False):
     else:
         pipe = "dummy"
 
+def get_safe_prompt(prompt):
+    """
+    Sanitize prompt for use in filename.
+    Keeps only alphanumeric, spaces, underscores and hyphens.
+    Replaces spaces with underscores and truncates to 100 chars.
+    """
+    safe = "".join([c if c.isalnum() or c in (' ', '_', '-') else '' for c in prompt])
+    safe = safe.replace(' ', '_')[:100]
+    return safe
+
+def get_filename(prompt, index):
+    """
+    Generate filename based on sanitized prompt and index.
+    """
+    safe_prompt = get_safe_prompt(prompt)
+    return f"{safe_prompt}-{index}.mp4"
+
 def sample_prompts(prompt_list, sample_ratio, sample_seed):
     """
     Sample a subset of prompts based on the given ratio and seed.
@@ -287,7 +304,8 @@ def main():
         for i, prompt in enumerate(sampled_prompts):
             print(f"[{i+1}/{sampled_count}] Processing prompt: {prompt}")
             for index in range(args.num_samples):
-                filename = f"{prompt}-{index}.mp4"
+                # Generate filename based on sanitized prompt
+                filename = get_filename(prompt, index)
                 file_path = os.path.join(dim_save_path, filename)
                 
                 if os.path.exists(file_path):
